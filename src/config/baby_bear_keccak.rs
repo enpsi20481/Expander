@@ -1,6 +1,6 @@
 use super::{FieldType, GKRConfig};
 use crate::Keccak256hasher;
-use arith::{BabyBear, BabyBearExt4, ExtensionField};
+use arith::{BabyBear, BabyBearExt3, ExtensionField};
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct BabyBearConfigKeccak;
@@ -9,9 +9,9 @@ pub struct BabyBearConfigKeccak;
 impl GKRConfig for BabyBearConfigKeccak {
     type CircuitField = BabyBear;
 
-    type ChallengeField = BabyBearExt4;
+    type ChallengeField = BabyBearExt3;
 
-    type Field = BabyBearExt4;
+    type Field = BabyBearExt3;
 
     type SimdCircuitField = BabyBear;
 

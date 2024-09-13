@@ -12,6 +12,8 @@ use std::io::{Read, Write};
 #[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq, PartialOrd, Ord)]
 pub struct BabyBear(P3BabyBear);
 
+pub const BABYBEAR_MODULUS: u32 = 0x78000001;
+
 field_common!(BabyBear);
 
 impl BabyBear {
