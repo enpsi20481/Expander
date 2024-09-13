@@ -12,6 +12,19 @@ use sha2::Digest;
 
 #[allow(dead_code)]
 fn gen_simple_circuit<C: GKRConfig>() -> Circuit<C> {
+    //
+    // Trivial test circuit:
+    //
+    //   A  A+B  A*B (0)
+    //   A   B    C
+    //   |   |    |
+    //   | __|___ *
+    //   |/  |    |
+    //   |   +    |
+    //   | / |    |
+    //   A   B    C   (D)
+    //
+
     let mut circuit = Circuit::default();
     let mut l0 = CircuitLayer::default();
     l0.input_var_num = 2;
@@ -44,7 +57,9 @@ fn gen_simple_circuit<C: GKRConfig>() -> Circuit<C> {
         is_random: false,
         gate_type: 1,
     });
-    circuit.layers.push(l0.clone());
+    circuit.layers.push(l0);
+
+    circuit.identify_rnd_coefs();
     circuit
 }
 
@@ -71,23 +86,42 @@ fn test_gkr_correctness() {
 }
 
 fn test_gkr_correctness_helper<C: GKRConfig>(config: &Config<C>) {
-    println!("Config created.");
-    let mut circuit_path = KECCAK_M31_CIRCUIT;
-    if C::FIELD_TYPE == FieldType::GF2 {
-        circuit_path = KECCAK_GF2_CIRCUIT;
-    }
+    do_test_gkr_correctness_helper(config, true);
+    do_test_gkr_correctness_helper(config, false);
+}
 
-    let mut circuit = Circuit::<C>::load_circuit(circuit_path);
-    // circuit.layers = circuit.layers[6..7].to_vec(); //  for only evaluate certain layer
-    // let mut circuit = gen_simple_circuit(); // for custom circuit
-    println!("Circuit loaded.");
+fn do_test_gkr_correctness_helper<C: GKRConfig>(config: &Config<C>, from_file: bool) {
+    println!("Config created.");
+
+    let mut circuit = {
+        if from_file {
+            let mut circuit_path = KECCAK_M31_CIRCUIT;
+            if C::FIELD_TYPE == FieldType::GF2 {
+                circuit_path = KECCAK_GF2_CIRCUIT;
+            }
+
+            let mut circuit = Circuit::<C>::load_circuit(circuit_path);
+            circuit.layers = circuit.layers[6..7].to_vec(); //  for only evaluate certain layer
+            println!("Circuit loaded.");
+            circuit
+        } else {
+            println!("Simple circuit.");
+            let mut circuit = gen_simple_circuit(); // for custom circuit
+
+            // // for fixed input
+            // for i in 0..(1 << circuit.log_input_size()) {
+            //     circuit
+            //         .layers
+            //         .first_mut()
+            //         .unwrap()
+            //         .input_vals
+            //         .push(C::SimdCircuitField::from(((i + 1) * 7 % 321) as u32));
+            // }
+            circuit
+        }
+    };
 
     circuit.set_random_input_for_test();
-
-    // for fixed input
-    // for i in 0..(1 << circuit.log_input_size()) {
-    //     circuit.layers.first_mut().unwrap().input_vals[i] = F::from((i % 3 == 1) as u32);
-    // }
 
     let mut prover = Prover::new(config);
     prover.prepare_mem(&circuit);
