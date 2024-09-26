@@ -416,4 +416,3 @@ fn square_internal(a: &[BabyBearx16; 4]) -> [BabyBearx16; 4] {
 
     res
 }
-
