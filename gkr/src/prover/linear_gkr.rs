@@ -107,14 +107,15 @@ impl<C: GKRConfig> Prover<C> {
         c.fill_rnd_coefs(transcript);
         c.evaluate();
 
-        let mut claimed_v = C::ChallengeField::default();
+        let claimed_v;
         let mut _rx = vec![];
         let mut _ry = None;
         let mut _rsimd = vec![];
         let mut _rmpi = vec![];
 
         if self.config.gkr_scheme == GKRScheme::GkrSquare {
-            (_, _rx) = gkr_square_prove(c, &mut self.sp, transcript);
+            (claimed_v, _rx, _rsimd) =
+                gkr_square_prove(c, &mut self.sp, transcript, &self.config.mpi_config);
         } else {
             (claimed_v, _rx, _ry, _rsimd, _rmpi) =
                 gkr_prove(c, &mut self.sp, transcript, &self.config.mpi_config);
