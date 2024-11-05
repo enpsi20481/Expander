@@ -307,7 +307,7 @@ fn do_prove_verify<C: GKRConfig>(config: Config<C>, circuit: &mut Circuit<C>) {
     let (mut claimed_v, proof) = prover.prove(circuit);
 
     // Verify
-    // let verifier = Verifier::new(&config);
-    // let public_input = vec![];
-    // assert!(verifier.verify(circuit, &public_input, &mut claimed_v, &proof))
+    let verifier = Verifier::new(&config);
+    let public_input = vec![];
+    assert!(verifier.verify(circuit, &public_input, &mut claimed_v, &proof))
 }

@@ -26,6 +26,7 @@ pub fn gkr_square_prove<C: GKRConfig, T: Transcript<C::ChallengeField>>(
     for _i in 0..circuit.layers.last().unwrap().output_var_num {
         rz0.push(transcript.generate_challenge_field_element());
     }
+    log::trace!("Initial rz0: {:?}", rz0);
 
     let mut r_simd = vec![];
     for _i in 0..C::get_field_pack_size().trailing_zeros() {
@@ -74,7 +75,7 @@ pub fn gkr_square_prove<C: GKRConfig, T: Transcript<C::ChallengeField>>(
         log::trace!("Layer {} proved", i);
         log::trace!("rz0.0: {:?}", rz0[0]);
         log::trace!("rz0.1: {:?}", rz0[1]);
-        log::trace!("rz0.2: {:?}", rz0[2]);
+        // log::trace!("rz0.2: {:?}", rz0[2]);
     }
 
     end_timer!(timer);

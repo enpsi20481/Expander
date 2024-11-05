@@ -6,7 +6,7 @@ use std::{
 use arith::{Field, FieldSerde};
 use ark_std::{end_timer, start_timer};
 use circuit::{Circuit, CircuitLayer};
-use config::{Config, FiatShamirHashType, GKRConfig, PolynomialCommitmentType};
+use config::{Config, FiatShamirHashType, GKRConfig, GKRScheme, PolynomialCommitmentType};
 use sumcheck::{GKRVerifierHelper, VerifierScratchPad};
 use transcript::{
     BytesHashTranscript, FieldHashTranscript, Keccak256hasher, MIMCHasher, Proof, SHA256hasher,
@@ -16,6 +16,9 @@ use transcript::{
 #[cfg(feature = "grinding")]
 use crate::grind;
 use crate::RawCommitment;
+
+mod gkr_square;
+pub use gkr_square::gkr_square_verify;
 
 #[inline(always)]
 fn verify_sumcheck_step<C: GKRConfig, T: Transcript<C::ChallengeField>>(
@@ -31,17 +34,27 @@ fn verify_sumcheck_step<C: GKRConfig, T: Transcript<C::ChallengeField>>(
         ps.push(C::ChallengeField::deserialize_from(&mut proof_reader).unwrap());
         transcript.append_field_element(&ps[i]);
     }
+    log::trace!("ps {:?}", ps);
 
     let r = transcript.generate_challenge_field_element();
+    log::trace!("r {:?}", r);
     randomness_vec.push(r);
 
     let verified = (ps[0] + ps[1]) == *claimed_sum;
+    log::trace!("verified {:?}", verified);
+    log::trace!("claimed_sum {:?}", claimed_sum);
+    log::trace!("ps[0] + ps[1] {:?}", ps[0] + ps[1]);
 
     if degree == 2 {
         *claimed_sum = GKRVerifierHelper::degree_2_eval(&ps, r, sp);
     } else if degree == 3 {
         *claimed_sum = GKRVerifierHelper::degree_3_eval(&ps, r, sp);
+    } else if degree == 6 {
+        *claimed_sum = GKRVerifierHelper::degree_6_eval(&ps, r, sp);
+    } else {
+        panic!("unsupported degree");
     }
+    log::trace!("next claimed_sum {:?}", claimed_sum);
 
     verified
 }
@@ -287,38 +300,68 @@ impl<C: GKRConfig> Verifier<C> {
 
         circuit.fill_rnd_coefs(transcript);
 
-        let (mut verified, rz0, rz1, r_simd, r_mpi, claimed_v0, claimed_v1) = gkr_verify(
-            &self.config,
-            circuit,
-            public_input,
-            claimed_v,
-            transcript,
-            &mut cursor,
-        );
+        let verified = match self.config.gkr_scheme {
+            GKRScheme::Vanilla => {
+                let (mut verified, rz0, rz1, r_simd, r_mpi, claimed_v0, claimed_v1) = gkr_verify(
+                    &self.config,
+                    circuit,
+                    public_input,
+                    claimed_v,
+                    transcript,
+                    &mut cursor,
+                );
 
-        log::info!("GKR verification: {}", verified);
+                log::info!("GKR verification: {}", verified);
 
-        match self.config.polynomial_commitment_type {
-            PolynomialCommitmentType::Raw => {
-                // for Raw, no need to load from proof
-                log::trace!("rz0.size() = {}", rz0.len());
-                log::trace!("Poly_vals.size() = {}", commitment.poly_vals.len());
+                match self.config.polynomial_commitment_type {
+                    PolynomialCommitmentType::Raw => {
+                        // for Raw, no need to load from proof
+                        log::trace!("rz0.size() = {}", rz0.len());
+                        log::trace!("Poly_vals.size() = {}", commitment.poly_vals.len());
 
-                let v1 = commitment.mpi_verify(&rz0, &r_simd, &r_mpi, claimed_v0);
-                verified &= v1;
+                        let v1 = commitment.mpi_verify(&rz0, &r_simd, &r_mpi, claimed_v0);
+                        verified &= v1;
 
-                if rz1.is_some() {
-                    let v2 = commitment.mpi_verify(
-                        rz1.as_ref().unwrap(),
-                        &r_simd,
-                        &r_mpi,
-                        claimed_v1.unwrap(),
-                    );
-                    verified &= v2;
+                        if rz1.is_some() {
+                            let v2 = commitment.mpi_verify(
+                                rz1.as_ref().unwrap(),
+                                &r_simd,
+                                &r_mpi,
+                                claimed_v1.unwrap(),
+                            );
+                            verified &= v2;
+                        }
+                    }
+                    _ => todo!(),
                 }
+                verified
             }
-            _ => todo!(),
-        }
+            GKRScheme::GkrSquare => {
+                let (mut verified, rz, r_simd, r_mpi, claimed_v) = gkr_square_verify(
+                    &self.config,
+                    circuit,
+                    public_input,
+                    claimed_v,
+                    transcript,
+                    &mut cursor,
+                );
+
+                log::info!("GKR verification: {}", verified);
+
+                match self.config.polynomial_commitment_type {
+                    PolynomialCommitmentType::Raw => {
+                        // for Raw, no need to load from proof
+                        log::trace!("rz.size() = {}", rz.len());
+                        log::trace!("Poly_vals.size() = {}", commitment.poly_vals.len());
+
+                        let v1 = commitment.mpi_verify(&rz, &r_simd, &r_mpi, claimed_v);
+                        verified &= v1;
+                    }
+                    _ => todo!(),
+                }
+                verified
+            }
+        };
 
         end_timer!(timer);
 
