@@ -5,6 +5,7 @@ mod gf2_ext_keccak;
 mod gf2_ext_sha2;
 mod m31_ext_keccak;
 mod m31_ext_sha2;
+mod m31_trivial_simd_sha2;
 
 use std::fmt::Debug;
 
@@ -18,6 +19,7 @@ pub use gf2_ext_keccak::GF2ExtConfigKeccak;
 pub use gf2_ext_sha2::GF2ExtConfigSha2;
 pub use m31_ext_keccak::M31ExtConfigKeccak;
 pub use m31_ext_sha2::M31ExtConfigSha2;
+pub use m31_trivial_simd_sha2::M31TrivialSimdSha2;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum FieldType {

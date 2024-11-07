@@ -6,8 +6,8 @@ use std::{
     ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-use arith::ExtensionField;
 use arith::{field_common, Field, FieldSerde, FieldSerdeResult};
+use arith::{ExtensionField, SimdField};
 
 use crate::m31::{mod_reduce_u32, M31};
 
@@ -164,6 +164,28 @@ impl Field for M31Ext3 {
                 },
             ],
         }
+    }
+}
+
+// Dummy SIMD implementation for the trivial SIMD config
+impl SimdField for M31Ext3 {
+    type Scalar = M31Ext3;
+
+    fn scale(&self, challenge: &Self::Scalar) -> Self {
+        *self * *challenge
+    }
+
+    fn pack(base_vec: &[Self::Scalar]) -> Self {
+        assert_eq!(base_vec.len(), 1);
+        base_vec[0]
+    }
+
+    fn unpack(&self) -> Vec<Self::Scalar> {
+        vec![*self]
+    }
+
+    fn pack_size() -> usize {
+        1
     }
 }
 

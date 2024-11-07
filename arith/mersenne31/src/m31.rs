@@ -4,7 +4,7 @@ use std::{
     ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-use arith::{field_common, Field, FieldForECC, FieldSerde, FieldSerdeResult};
+use arith::{field_common, Field, FieldForECC, FieldSerde, FieldSerdeResult, SimdField};
 use ark_std::Zero;
 use rand::RngCore;
 
@@ -142,6 +142,28 @@ impl Field for M31 {
     #[inline(always)]
     fn mul_by_6(&self) -> Self {
         *self * Self { v: 6 }
+    }
+}
+
+// Dummy SIMD implementation for the trivial SIMD config
+impl SimdField for M31 {
+    type Scalar = M31;
+
+    fn scale(&self, challenge: &Self::Scalar) -> Self {
+        *self * *challenge
+    }
+
+    fn pack(base_vec: &[Self::Scalar]) -> Self {
+        assert_eq!(base_vec.len(), 1);
+        base_vec[0]
+    }
+
+    fn unpack(&self) -> Vec<Self::Scalar> {
+        vec![*self]
+    }
+
+    fn pack_size() -> usize {
+        1
     }
 }
 
