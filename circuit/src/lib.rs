@@ -12,3 +12,6 @@ pub use witness::*;
 
 mod serde;
 pub use serde::*;
+
+mod examples;
+pub use examples::*;

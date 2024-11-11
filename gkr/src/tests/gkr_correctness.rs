@@ -4,7 +4,7 @@ use std::time::Instant;
 use std::{fs, panic};
 
 use arith::{Field, FieldSerde, SimdField};
-use circuit::{Circuit, CircuitLayer, CoefType, GateConst, GateUni};
+use circuit::{gkr_square_test_circuit, Circuit};
 use config::{
     root_println, BN254ConfigKeccak, BN254ConfigMIMC5, BN254ConfigSha2, Config, FieldType,
     GF2ExtConfigKeccak, GF2ExtConfigSha2, GKRConfig, GKRScheme, M31ExtConfigKeccak,
@@ -165,128 +165,6 @@ fn test_gkr_correctness_helper<C: GKRConfig>(config: &Config<C>, write_proof_to:
         println!("Bad proof rejected.");
         println!("============== end ===============");
     }
-}
-
-/// A simple GKR2 test circuit:
-/// ```text
-///         N_0_0     N_0_1             Layer 0 (Output)
-///    x11 /   \    /    |  \
-///  N_1_0     N_1_1  N_1_2  N_1_3      Layer 1
-///     |       |    /  |      |   \
-/// Pow5|       |  /    |      |    PI[0]
-///  N_2_0     N_2_1   N_2_2  N_2_3     Layer 2 (Input)
-/// ```
-/// (Unmarked lines are `+` gates with coeff 1)
-pub fn gkr_square_test_circuit<C: GKRConfig>() -> Circuit<C> {
-    let mut circuit = Circuit::default();
-
-    // Layer 1
-    let mut l1 = CircuitLayer {
-        input_var_num: 2,
-        output_var_num: 2,
-        ..Default::default()
-    };
-    // N_1_3 += PI[0] (public input)
-    l1.const_.push(GateConst {
-        i_ids: [],
-        o_id: 3,
-        coef: C::CircuitField::from(1),
-        coef_type: CoefType::PublicInput(0),
-        gate_type: 0,
-    });
-    // N_1_0 += (N_2_0)^5
-    l1.uni.push(GateUni {
-        i_ids: [0],
-        o_id: 0,
-        coef: C::CircuitField::from(1),
-        coef_type: CoefType::Constant,
-        gate_type: 12345,
-    });
-
-    // N_1_1 += N_2_1
-    l1.uni.push(GateUni {
-        i_ids: [1],
-        o_id: 1,
-        coef: C::CircuitField::from(1),
-        coef_type: CoefType::Constant,
-        gate_type: 12346,
-    });
-    // N_1_2 += N_2_1
-    l1.uni.push(GateUni {
-        i_ids: [1],
-        o_id: 2,
-        coef: C::CircuitField::from(1),
-        coef_type: CoefType::Constant,
-        gate_type: 12346,
-    });
-    // N_1_2 += N_2_2
-    l1.uni.push(GateUni {
-        i_ids: [2],
-        o_id: 2,
-        coef: C::CircuitField::from(1),
-        coef_type: CoefType::Constant,
-        gate_type: 12346,
-    });
-    // N_1_3 += N_2_3
-    l1.uni.push(GateUni {
-        i_ids: [3],
-        o_id: 3,
-        coef: C::CircuitField::from(1),
-        coef_type: CoefType::Constant,
-        gate_type: 12346,
-    });
-    circuit.layers.push(l1);
-
-    // Output layer
-    let mut output_layer = CircuitLayer {
-        input_var_num: 2,
-        output_var_num: 1,
-        ..Default::default()
-    };
-    // N_0_0 += 11 * N_1_0
-    output_layer.uni.push(GateUni {
-        i_ids: [0],
-        o_id: 0,
-        coef: C::CircuitField::from(11),
-        coef_type: CoefType::Constant,
-        gate_type: 12346,
-    });
-    // N_0_0 += N_1_1
-    output_layer.uni.push(GateUni {
-        i_ids: [1],
-        o_id: 0,
-        coef: C::CircuitField::from(1),
-        coef_type: CoefType::Constant,
-        gate_type: 12346,
-    });
-    // N_0_1 += N_1_1
-    output_layer.uni.push(GateUni {
-        i_ids: [1],
-        o_id: 1,
-        coef: C::CircuitField::from(1),
-        coef_type: CoefType::Constant,
-        gate_type: 12346,
-    });
-    // N_0_1 += N_1_2
-    output_layer.uni.push(GateUni {
-        i_ids: [2],
-        o_id: 1,
-        coef: C::CircuitField::from(1),
-        coef_type: CoefType::Constant,
-        gate_type: 12346,
-    });
-    // N_0_1 += N_1_3
-    output_layer.uni.push(GateUni {
-        i_ids: [3],
-        o_id: 1,
-        coef: C::CircuitField::from(1),
-        coef_type: CoefType::Constant,
-        gate_type: 12346,
-    });
-    circuit.layers.push(output_layer);
-
-    circuit.identify_rnd_coefs();
-    circuit
 }
 
 #[test]
