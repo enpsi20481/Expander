@@ -199,3 +199,19 @@ fn do_prove_verify<C: GKRConfig>(config: Config<C>, circuit: &mut Circuit<C>) {
     let public_input = circuit.public_input.clone();
     assert!(verifier.verify(circuit, &public_input, &mut claimed_v, &proof))
 }
+
+#[test]
+fn ecc_poseidon_baby_bear() {
+    type GkrConfigType = config::BabyBearTrivialSimdSha2;
+    env_logger::init();
+
+    const POSEIDON_CIRCUIT: &str = "../data/poseidon2_babybear.circuit";
+    const POSEIDON_WITNESS: &str = "../data/poseidon2_babybear.witness";
+
+    let mut circuit = Circuit::<GkrConfigType>::load_circuit(POSEIDON_CIRCUIT);
+    circuit.load_non_simd_witness_file(POSEIDON_WITNESS);
+
+    let config = Config::<GkrConfigType>::new(GKRScheme::GkrSquare, MPIConfig::new());
+
+    do_prove_verify(config, &mut circuit);
+}
