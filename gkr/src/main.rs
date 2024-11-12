@@ -96,6 +96,7 @@ fn run_benchmark<C: GKRConfig>(args: &Args, config: Config<C>) {
             FieldType::GF2 => Circuit::<C>::load_circuit(KECCAK_GF2_CIRCUIT),
             FieldType::M31 => Circuit::<C>::load_circuit(KECCAK_M31_CIRCUIT),
             FieldType::BN254 => Circuit::<C>::load_circuit(KECCAK_BN254_CIRCUIT),
+            FieldType::BabyBear => todo!(),
         },
         "poseidon" => match C::FIELD_TYPE {
             FieldType::M31 => Circuit::<C>::load_circuit(POSEIDON_M31_CIRCUIT),
@@ -107,6 +108,7 @@ fn run_benchmark<C: GKRConfig>(args: &Args, config: Config<C>) {
 
     let witness_path = match args.scheme.as_str() {
         "keccak" => match C::FIELD_TYPE {
+            FieldType::BabyBear => todo!(),
             FieldType::GF2 => KECCAK_GF2_WITNESS,
             FieldType::M31 => KECCAK_M31_WITNESS,
             FieldType::BN254 => KECCAK_BN254_WITNESS,

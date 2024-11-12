@@ -8,8 +8,8 @@ use std::{
 use arith::{Field, FieldSerde, FieldSerdeError};
 use circuit::Circuit;
 use config::{
-    BN254ConfigMIMC5, Config, FieldType, GF2ExtConfigSha2, GKRConfig, GKRScheme, M31ExtConfigSha2,
-    MPIConfig, SENTINEL_BN254, SENTINEL_GF2, SENTINEL_M31,
+    BN254ConfigMIMC5, BabyBearExt4ConfigSha2, Config, FieldType, GF2ExtConfigSha2, GKRConfig,
+    GKRScheme, M31ExtConfigSha2, MPIConfig, SENTINEL_BN254, SENTINEL_GF2, SENTINEL_M31,
 };
 use log::{debug, info};
 use transcript::Proof;
@@ -212,6 +212,15 @@ async fn main() {
     let field_type = detect_field_type_from_circuit_file(circuit_file);
     debug!("field type: {:?}", field_type);
     match field_type {
+        FieldType::BabyBear => {
+            run_command::<BabyBearExt4ConfigSha2>(
+                command,
+                circuit_file,
+                Config::<BabyBearExt4ConfigSha2>::new(GKRScheme::Vanilla, mpi_config.clone()),
+                &args,
+            )
+            .await;
+        }
         FieldType::M31 => {
             run_command::<M31ExtConfigSha2>(
                 command,
