@@ -3,7 +3,7 @@ use std::{
     ops::{Add, AddAssign, Mul, MulAssign, Neg, Sub, SubAssign},
 };
 
-use arith::{field_common, ExtensionField, Field, FieldSerde, FieldSerdeResult};
+use arith::{field_common, ExtensionField, Field, FieldSerde, FieldSerdeResult, SimdField};
 use p3_field::{AbstractExtensionField, Field as P3Field, PrimeField32};
 
 use crate::BabyBear;
@@ -198,6 +198,28 @@ impl ExtensionField for BabyBearExt4 {
         Self {
             v: [self.v[3] * w, self.v[0], self.v[1], self.v[2]],
         }
+    }
+}
+
+// This is a dummy implementation to satisfy trait bounds
+impl SimdField for BabyBearExt4 {
+    type Scalar = Self;
+
+    fn scale(&self, challenge: &Self::Scalar) -> Self {
+        self * challenge
+    }
+
+    fn pack(base_vec: &[Self::Scalar]) -> Self {
+        assert!(base_vec.len() == 1);
+        base_vec[0]
+    }
+
+    fn unpack(&self) -> Vec<Self::Scalar> {
+        vec![*self]
+    }
+
+    fn pack_size() -> usize {
+        1
     }
 }
 

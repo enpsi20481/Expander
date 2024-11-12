@@ -1,4 +1,5 @@
 mod babybear_sha2;
+mod babybear_trivial_simd_sha2;
 mod bn254_keccak;
 mod bn254_mimc;
 mod bn254_sha2;
@@ -14,6 +15,7 @@ use arith::{ExtensionField, Field, FieldForECC, FieldSerde, SimdField};
 use ark_std::{end_timer, start_timer};
 
 pub use babybear_sha2::BabyBearExt4ConfigSha2;
+pub use babybear_trivial_simd_sha2::BabyBearTrivialSimdSha2;
 pub use bn254_keccak::BN254ConfigKeccak;
 pub use bn254_mimc::BN254ConfigMIMC5;
 pub use bn254_sha2::BN254ConfigSha2;
