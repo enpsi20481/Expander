@@ -88,6 +88,7 @@ impl<C: GKRConfig> Prover<C> {
     ) -> (C::ChallengeField, Proof)
     where
         T: Transcript<C::ChallengeField>,
+        [(); C::DEGREE_PLUS_ONE]:,
     {
         let timer = start_timer!(|| "prove");
 
@@ -134,7 +135,10 @@ impl<C: GKRConfig> Prover<C> {
         (claimed_v, transcript.finalize_and_get_proof())
     }
 
-    pub fn prove(&mut self, c: &mut Circuit<C>) -> (C::ChallengeField, Proof) {
+    pub fn prove(&mut self, c: &mut Circuit<C>) -> (C::ChallengeField, Proof)
+    where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         match C::FIAT_SHAMIR_HASH {
             FiatShamirHashType::Keccak256 => {
                 let mut transcript =

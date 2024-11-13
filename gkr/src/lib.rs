@@ -1,3 +1,5 @@
+#![allow(incomplete_features)]
+#![feature(generic_const_exprs)]
 #![cfg_attr(target_arch = "x86_64", feature(stdarch_x86_avx512))]
 
 pub mod poly_commit;

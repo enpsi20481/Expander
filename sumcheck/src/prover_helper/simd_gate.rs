@@ -84,23 +84,23 @@ impl SumcheckSimdProdGateHelper {
     /// Evaluate the GKR2 sumcheck polynomial at a SIMD variable,
     /// after x-sumcheck rounds have fixed the x variables. The
     /// polynomial is degree (D-1) in the SIMD variables.
-    pub(crate) fn gkr2_poly_eval_at<C: GKRConfig, const D: usize>(
+    pub(crate) fn gkr2_poly_eval_at<C: GKRConfig>(
         &self,
         var_idx: usize,
         bk_eq: &[C::ChallengeField],
         bk_v_simd: &[C::ChallengeField],
         add_eval: C::ChallengeField,
         pow_5_eval: C::ChallengeField,
-    ) -> [C::ChallengeField; D] {
-        let mut p = [C::ChallengeField::zero(); D];
+    ) -> [C::ChallengeField; C::DEGREE_PLUS_ONE] {
+        let mut p = [C::ChallengeField::zero(); C::DEGREE_PLUS_ONE];
         let mut p_add = [C::ChallengeField::zero(); 3];
         let eval_size = 1 << (self.var_num - var_idx - 1);
 
         for i in 0..eval_size {
             // witness polynomial along current variable
-            let mut f_v = [C::ChallengeField::zero(); D];
+            let mut f_v = [C::ChallengeField::zero(); C::DEGREE_PLUS_ONE];
             // eq polynomial along current variable
-            let mut eq_v = [C::ChallengeField::zero(); D];
+            let mut eq_v = [C::ChallengeField::zero(); C::DEGREE_PLUS_ONE];
             f_v[0] = bk_v_simd[i * 2];
             f_v[1] = bk_v_simd[i * 2 + 1];
             eq_v[0] = bk_eq[i * 2];
@@ -109,11 +109,11 @@ impl SumcheckSimdProdGateHelper {
             // Evaluate term eq(A, r_z) * Pow5(r_z, r_x) * V(A, r_x)^5
             let delta_f = f_v[1] - f_v[0];
             let delta_eq = eq_v[1] - eq_v[0];
-            for i in 2..D {
+            for i in 2..C::DEGREE_PLUS_ONE {
                 f_v[i] = f_v[i - 1] + delta_f;
                 eq_v[i] = eq_v[i - 1] + delta_eq;
             }
-            for i in 0..D {
+            for i in 0..C::DEGREE_PLUS_ONE {
                 let pow5 = f_v[i].square().square() * f_v[i];
                 p[i] += pow_5_eval * pow5 * eq_v[i];
             }
@@ -127,14 +127,14 @@ impl SumcheckSimdProdGateHelper {
         p_add[2] = p_add[1].mul_by_6() + p_add[0].mul_by_3() - p_add[2].double();
 
         // Interpolate p_add into 7 points, add to p
-        Self::interpolate_3::<C, D>(&p_add, &mut p);
+        Self::interpolate_3::<C>(&p_add, &mut p);
         p
     }
 
     // Function to interpolate a quadratic polynomial and update an array of points
-    fn interpolate_3<C: GKRConfig, const D: usize>(
+    fn interpolate_3<C: GKRConfig>(
         p_add: &[C::ChallengeField; 3],
-        p: &mut [C::ChallengeField; D],
+        p: &mut [C::ChallengeField; C::DEGREE_PLUS_ONE],
     ) {
         // Calculate coefficients for the interpolating polynomial
         let p_add_coef_0 = p_add[0];

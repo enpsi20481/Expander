@@ -1,3 +1,5 @@
+#![allow(incomplete_features)]
+#![feature(generic_const_exprs)]
 use std::{
     fs,
     io::Cursor,
@@ -58,7 +60,9 @@ async fn run_command<'a, C: GKRConfig>(
     circuit_file: &str,
     config: Config<C>,
     args: &[String],
-) {
+) where
+    [(); C::DEGREE_PLUS_ONE]:,
+{
     match command {
         "prove" => {
             let witness_file = &args[3];

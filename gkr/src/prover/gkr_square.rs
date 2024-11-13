@@ -18,7 +18,10 @@ pub fn gkr_square_prove<C: GKRConfig, T: Transcript<C::ChallengeField>>(
     C::ChallengeField,
     Vec<C::ChallengeField>,
     Vec<C::ChallengeField>,
-) {
+)
+where
+    [(); C::DEGREE_PLUS_ONE]:,
+{
     let timer = start_timer!(|| "gkr^2 prove");
     let layer_num = circuit.layers.len();
 

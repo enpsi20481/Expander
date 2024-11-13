@@ -6,8 +6,10 @@ use polynomials::EqPolynomial;
 
 use super::{power_gate::SumcheckPowerGateHelper, simd_gate::SumcheckSimdProdGateHelper};
 
-// todo: Move D to GKRConfig
-pub(crate) struct SumcheckGkrSquareHelper<'a, C: GKRConfig, const D: usize> {
+pub(crate) struct SumcheckGkrSquareHelper<'a, C: GKRConfig>
+where
+    [(); C::DEGREE_PLUS_ONE]:,
+{
     pub(crate) rx: Vec<C::ChallengeField>,
     pub(crate) r_simd_var: Vec<C::ChallengeField>,
 
@@ -20,11 +22,14 @@ pub(crate) struct SumcheckGkrSquareHelper<'a, C: GKRConfig, const D: usize> {
     _output_var_num: usize,
     pub(crate) simd_var_num: usize,
 
-    x_helper: SumcheckPowerGateHelper<D>,
+    x_helper: SumcheckPowerGateHelper<{ C::DEGREE_PLUS_ONE }>,
     simd_helper: SumcheckSimdProdGateHelper,
 }
 
-impl<'a, C: GKRConfig, const D: usize> SumcheckGkrSquareHelper<'a, C, D> {
+impl<'a, C: GKRConfig> SumcheckGkrSquareHelper<'a, C>
+where
+    [(); C::DEGREE_PLUS_ONE]:,
+{
     #[inline]
     pub(crate) fn new(
         layer: &'a CircuitLayer<C>,
@@ -53,7 +58,10 @@ impl<'a, C: GKRConfig, const D: usize> SumcheckGkrSquareHelper<'a, C, D> {
     }
 
     #[inline]
-    pub(crate) fn poly_evals_at_x(&self, var_idx: usize) -> [C::ChallengeField; D] {
+    pub(crate) fn poly_evals_at_x(
+        &self,
+        var_idx: usize,
+    ) -> [C::ChallengeField; C::DEGREE_PLUS_ONE] {
         let evals = self.x_helper.poly_eval_at::<C>(
             var_idx,
             &self.sp.v_evals,
@@ -63,7 +71,7 @@ impl<'a, C: GKRConfig, const D: usize> SumcheckGkrSquareHelper<'a, C, D> {
             &self.sp.gate_exists_5,
             &self.sp.gate_exists_1,
         );
-        let mut simd_combined = [C::ChallengeField::zero(); D];
+        let mut simd_combined = [C::ChallengeField::zero(); C::DEGREE_PLUS_ONE];
         for (combined, simd_val) in simd_combined.iter_mut().zip(evals.iter()) {
             *combined = unpack_and_combine(simd_val, &self.sp.eq_evals_at_r_simd0);
         }
@@ -71,8 +79,11 @@ impl<'a, C: GKRConfig, const D: usize> SumcheckGkrSquareHelper<'a, C, D> {
     }
 
     #[inline]
-    pub(crate) fn poly_evals_at_simd(&self, var_idx: usize) -> [C::ChallengeField; D] {
-        self.simd_helper.gkr2_poly_eval_at::<C, D>(
+    pub(crate) fn poly_evals_at_simd(
+        &self,
+        var_idx: usize,
+    ) -> [C::ChallengeField; C::DEGREE_PLUS_ONE] {
+        self.simd_helper.gkr2_poly_eval_at::<C>(
             var_idx,
             &self.sp.eq_evals_at_r_simd0,
             &self.sp.simd_var_v_evals,

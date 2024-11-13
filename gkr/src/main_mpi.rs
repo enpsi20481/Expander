@@ -1,3 +1,5 @@
+#![allow(incomplete_features)]
+#![feature(generic_const_exprs)]
 use circuit::Circuit;
 use clap::Parser;
 use config::{
@@ -75,7 +77,10 @@ fn main() {
     MPIConfig::finalize();
 }
 
-fn run_benchmark<C: GKRConfig>(args: &Args, config: Config<C>) {
+fn run_benchmark<C: GKRConfig>(args: &Args, config: Config<C>)
+where
+    [(); C::DEGREE_PLUS_ONE]:,
+{
     let pack_size = C::get_field_pack_size();
 
     // load circuit

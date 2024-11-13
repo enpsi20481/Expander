@@ -31,11 +31,10 @@ pub struct CircuitLayer<C: GKRConfig> {
 }
 
 impl<C: GKRConfig> CircuitLayer<C> {
-    pub fn evaluate(
-        &self,
-        res: &mut Vec<C::SimdCircuitField>,
-        public_input: &[C::SimdCircuitField],
-    ) {
+    pub fn evaluate(&self, res: &mut Vec<C::SimdCircuitField>, public_input: &[C::SimdCircuitField])
+    where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         res.clear();
         res.resize(1 << self.output_var_num, C::SimdCircuitField::zero());
         for gate in &self.mul {

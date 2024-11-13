@@ -99,8 +99,10 @@ pub fn sumcheck_prove_gkr_square_layer<C: GKRConfig, T: Transcript<C::ChallengeF
     r_simd: &[C::ChallengeField],
     transcript: &mut T,
     sp: &mut ProverScratchPad<C>,
-) -> (Vec<C::ChallengeField>, Vec<C::ChallengeField>) {
-    const D: usize = 7;
+) -> (Vec<C::ChallengeField>, Vec<C::ChallengeField>)
+where
+    [(); C::DEGREE_PLUS_ONE]:, // required by the const_generics unstable feature
+{
     let mut helper = SumcheckGkrSquareHelper::new(layer, rz0, r_simd, sp);
 
     helper.prepare_simd();
@@ -108,9 +110,9 @@ pub fn sumcheck_prove_gkr_square_layer<C: GKRConfig, T: Transcript<C::ChallengeF
 
     // x-variable sumcheck rounds
     for i_var in 0..layer.input_var_num {
-        let evals: [C::ChallengeField; D] = helper.poly_evals_at_x(i_var);
+        let evals = helper.poly_evals_at_x(i_var);
 
-        for deg in 0..D {
+        for deg in 0..C::DEGREE_PLUS_ONE {
             transcript.append_field_element(&evals[deg]);
         }
         let r = transcript.generate_challenge_field_element();
@@ -127,7 +129,7 @@ pub fn sumcheck_prove_gkr_square_layer<C: GKRConfig, T: Transcript<C::ChallengeF
     for i_var in 0..helper.simd_var_num {
         let evals = helper.poly_evals_at_simd(i_var);
 
-        for deg in 0..D {
+        for deg in 0..C::DEGREE_PLUS_ONE {
             transcript.append_field_element(&evals[deg]);
         }
         let r = transcript.generate_challenge_field_element();

@@ -1,3 +1,5 @@
+#![allow(incomplete_features)]
+#![feature(generic_const_exprs)]
 use circuit::Circuit;
 use config::{BN254ConfigSha2, Config, GKRConfig, GKRScheme, M31ExtConfigSha2, MPIConfig};
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
@@ -10,7 +12,10 @@ use gkr::{
 };
 use std::hint::black_box;
 
-fn prover_run<C: GKRConfig>(config: &Config<C>, circuit: &mut Circuit<C>) {
+fn prover_run<C: GKRConfig>(config: &Config<C>, circuit: &mut Circuit<C>)
+where
+    [(); C::DEGREE_PLUS_ONE]:,
+{
     let mut prover = Prover::new(config);
     prover.prepare_mem(circuit);
     prover.prove(circuit);

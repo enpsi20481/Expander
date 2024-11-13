@@ -52,7 +52,10 @@ fn test_gkr_correctness() {
 }
 
 #[allow(unreachable_patterns)]
-fn test_gkr_correctness_helper<C: GKRConfig>(config: &Config<C>, write_proof_to: Option<&str>) {
+fn test_gkr_correctness_helper<C: GKRConfig>(config: &Config<C>, write_proof_to: Option<&str>)
+where
+    [(); C::DEGREE_PLUS_ONE]:,
+{
     root_println!(config.mpi_config, "============== start ===============");
     root_println!(config.mpi_config, "Field Type: {:?}", C::FIELD_TYPE);
     let circuit_copy_size: usize = match C::FIELD_TYPE {
@@ -186,7 +189,10 @@ fn gkr_square_correctness() {
     do_prove_verify(config, &mut circuit);
 }
 
-fn do_prove_verify<C: GKRConfig>(config: Config<C>, circuit: &mut Circuit<C>) {
+fn do_prove_verify<C: GKRConfig>(config: Config<C>, circuit: &mut Circuit<C>)
+where
+    [(); C::DEGREE_PLUS_ONE]:,
+{
     circuit.evaluate();
 
     // Prove

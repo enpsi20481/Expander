@@ -64,6 +64,9 @@ pub trait GKRConfig: Default + Debug + Clone + Send + Sync + 'static {
     /// Enum type for Self::Field
     const FIELD_TYPE: FieldType;
 
+    /// GKR polynomial degree plus one. Equals 3 for linear GKR.
+    const DEGREE_PLUS_ONE: usize = 3;
+
     /// API to allow for multiplications between the challenge and the circuit field
     fn challenge_mul_circuit_field(
         a: &Self::ChallengeField,
