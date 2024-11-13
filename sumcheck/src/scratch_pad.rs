@@ -113,6 +113,14 @@ where
             .max()
             .unwrap();
         max_num_var = max(max_num_var, circuit.log_input_size());
+        max_num_var = max(
+            max_num_var,
+            C::get_field_pack_size().trailing_zeros() as usize,
+        );
+        max_num_var = max(
+            max_num_var,
+            config.mpi_config.world_size().trailing_zeros() as usize,
+        );
 
         let max_io_size = 1usize << max_num_var;
         let simd_size = C::get_field_pack_size();
