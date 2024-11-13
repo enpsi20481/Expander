@@ -76,9 +76,7 @@ where
             sumcheck_prove_gkr_square_layer(&circuit.layers[i], &rz0, &r_simd, transcript, sp);
 
         log::trace!("Layer {} proved", i);
-        log::trace!("rz0.0: {:?}", rz0[0]);
-        log::trace!("rz0.1: {:?}", rz0[1]);
-        // log::trace!("rz0.2: {:?}", rz0[2]);
+        log::trace!("rz0: {:?}", rz0);
     }
 
     end_timer!(timer);

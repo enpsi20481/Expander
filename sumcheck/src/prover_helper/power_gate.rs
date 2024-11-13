@@ -70,9 +70,9 @@ impl<const D: usize> SumcheckPowerGateHelper<D> {
         gate_exists_add: &[bool],
     ) -> [C::Field; D] {
         let mut p = [C::Field::zero(); D];
-        log::trace!("bk_f: {:?}", &bk_f[..4]);
-        log::trace!("bk_pow_poly: {:?}", &bk_pow_poly[..4]);
-        log::trace!("init_v: {:?}", &init_v[..4]);
+        log::trace!("bk_f: {:?}", &bk_f);
+        log::trace!("bk_pow_poly: {:?}", &bk_pow_poly);
+        log::trace!("init_v: {:?}", &init_v);
         if var_idx == 0 {
             let src_v = init_v;
             let eval_size = 1 << (self.var_num - var_idx - 1);
