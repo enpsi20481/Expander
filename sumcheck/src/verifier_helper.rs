@@ -20,7 +20,9 @@ impl GKRVerifierHelper {
         r_mpi: &Vec<C::ChallengeField>,
         sp: &mut VerifierScratchPad<C>,
         is_output_layer: bool,
-    ) {
+    ) where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         assert_eq!(alpha.is_none(), rz1.is_none());
 
         if is_output_layer {
@@ -68,7 +70,10 @@ impl GKRVerifierHelper {
         cst_gates: &[GateConst<C>],
         public_input: &[C::SimdCircuitField],
         sp: &VerifierScratchPad<C>,
-    ) -> C::ChallengeField {
+    ) -> C::ChallengeField
+    where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         let mut v = C::ChallengeField::zero();
 
         let mpi_world_size = sp.eq_evals_at_r_mpi.len();
@@ -111,7 +116,10 @@ impl GKRVerifierHelper {
     pub fn eval_add<C: GKRConfig>(
         add_gates: &[GateAdd<C>],
         sp: &VerifierScratchPad<C>,
-    ) -> C::ChallengeField {
+    ) -> C::ChallengeField
+    where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         let mut v = C::ChallengeField::zero();
         for add_gate in add_gates {
             v += sp.eq_evals_at_rz0[add_gate.o_id]
@@ -127,7 +135,10 @@ impl GKRVerifierHelper {
     pub fn eval_mul<C: GKRConfig>(
         mul_gates: &[GateMul<C>],
         sp: &VerifierScratchPad<C>,
-    ) -> C::ChallengeField {
+    ) -> C::ChallengeField
+    where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         let mut v = C::ChallengeField::zero();
         for mul_gate in mul_gates {
             let tmp = sp.eq_evals_at_rx[mul_gate.i_ids[0]]
@@ -145,7 +156,10 @@ impl GKRVerifierHelper {
     pub fn eval_pow_1<C: GKRConfig>(
         gates: &[GateUni<C>],
         sp: &VerifierScratchPad<C>,
-    ) -> C::ChallengeField {
+    ) -> C::ChallengeField
+    where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         let mut v = C::ChallengeField::zero();
         for gate in gates {
             // Gates of type 12346 represent an add gate
@@ -161,7 +175,10 @@ impl GKRVerifierHelper {
     pub fn eval_pow_5<C: GKRConfig>(
         gates: &[GateUni<C>],
         sp: &VerifierScratchPad<C>,
-    ) -> C::ChallengeField {
+    ) -> C::ChallengeField
+    where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         let mut v = C::ChallengeField::zero();
         for gate in gates {
             // Gates of type 12345 represent a pow5 gate
@@ -174,7 +191,10 @@ impl GKRVerifierHelper {
     }
 
     #[inline(always)]
-    pub fn set_rx<C: GKRConfig>(rx: &[C::ChallengeField], sp: &mut VerifierScratchPad<C>) {
+    pub fn set_rx<C: GKRConfig>(rx: &[C::ChallengeField], sp: &mut VerifierScratchPad<C>)
+    where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         EqPolynomial::<C::ChallengeField>::eq_eval_at(
             rx,
             &C::ChallengeField::ONE,
@@ -188,7 +208,9 @@ impl GKRVerifierHelper {
     pub fn set_r_simd_xy<C: GKRConfig>(
         r_simd_xy: &[C::ChallengeField],
         sp: &mut VerifierScratchPad<C>,
-    ) {
+    ) where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         sp.eq_r_simd_r_simd_xy = EqPolynomial::<C::ChallengeField>::eq_vec(
             unsafe { sp.r_simd.as_ref().unwrap() },
             r_simd_xy,
@@ -199,7 +221,9 @@ impl GKRVerifierHelper {
     pub fn set_r_mpi_xy<C: GKRConfig>(
         r_mpi_xy: &[C::ChallengeField],
         sp: &mut VerifierScratchPad<C>,
-    ) {
+    ) where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         sp.eq_r_mpi_r_mpi_xy = EqPolynomial::<C::ChallengeField>::eq_vec(
             unsafe { sp.r_mpi.as_ref().unwrap() },
             r_mpi_xy,
@@ -207,7 +231,10 @@ impl GKRVerifierHelper {
     }
 
     #[inline(always)]
-    pub fn set_ry<C: GKRConfig>(ry: &[C::ChallengeField], sp: &mut VerifierScratchPad<C>) {
+    pub fn set_ry<C: GKRConfig>(ry: &[C::ChallengeField], sp: &mut VerifierScratchPad<C>)
+    where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         EqPolynomial::<C::ChallengeField>::eq_eval_at(
             ry,
             &C::ChallengeField::ONE,
@@ -222,7 +249,10 @@ impl GKRVerifierHelper {
         ps: &[C::ChallengeField],
         x: C::ChallengeField,
         sp: &VerifierScratchPad<C>,
-    ) -> C::ChallengeField {
+    ) -> C::ChallengeField
+    where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         assert_eq!(ps.len(), 3);
         let p0 = ps[0];
         let p1 = ps[1];
@@ -248,7 +278,10 @@ impl GKRVerifierHelper {
         vals: &[C::ChallengeField],
         x: C::ChallengeField,
         sp: &VerifierScratchPad<C>,
-    ) -> C::ChallengeField {
+    ) -> C::ChallengeField
+    where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         Self::lag_eval(vals, x, sp)
     }
 
@@ -257,7 +290,10 @@ impl GKRVerifierHelper {
         vals: &[C::ChallengeField],
         x: C::ChallengeField,
         sp: &VerifierScratchPad<C>,
-    ) -> C::ChallengeField {
+    ) -> C::ChallengeField
+    where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         Self::lag_eval(vals, x, sp)
     }
 
@@ -266,10 +302,26 @@ impl GKRVerifierHelper {
         vals: &[C::ChallengeField],
         x: C::ChallengeField,
         sp: &VerifierScratchPad<C>,
-    ) -> C::ChallengeField {
+    ) -> C::ChallengeField
+    where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         let (evals, lag_denoms_inv) = match vals.len() {
             4 => (sp.deg3_eval_at.to_vec(), sp.deg3_lag_denoms_inv.to_vec()),
-            7 => (sp.deg6_eval_at.to_vec(), sp.deg6_lag_denoms_inv.to_vec()),
+            7 => {
+                assert_eq!(C::DEGREE_PLUS_ONE, 7, "Degree does not match config");
+                (
+                    sp.high_deg_eval_at.to_vec(),
+                    sp.high_deg_lag_denoms_inv.to_vec(),
+                )
+            }
+            9 => {
+                assert_eq!(C::DEGREE_PLUS_ONE, 9, "Degree does not match config");
+                (
+                    sp.high_deg_eval_at.to_vec(),
+                    sp.high_deg_lag_denoms_inv.to_vec(),
+                )
+            }
             _ => panic!("unsupported degree"),
         };
 

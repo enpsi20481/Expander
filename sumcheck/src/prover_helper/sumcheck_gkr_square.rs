@@ -65,11 +65,11 @@ where
         let evals = self.x_helper.poly_eval_at::<C>(
             var_idx,
             &self.sp.v_evals,
-            &self.sp.hg_evals_5,
-            &self.sp.hg_evals_1,
+            &self.sp.pow_poly_evals,
+            &self.sp.add_poly_evals,
             &self.layer.input_vals,
-            &self.sp.gate_exists_5,
-            &self.sp.gate_exists_1,
+            &self.sp.gate_exists_pow,
+            &self.sp.gate_exists_add,
         );
         let mut simd_combined = [C::ChallengeField::zero(); C::DEGREE_PLUS_ONE];
         for (combined, simd_val) in simd_combined.iter_mut().zip(evals.iter()) {
@@ -87,8 +87,8 @@ where
             var_idx,
             &self.sp.eq_evals_at_r_simd0,
             &self.sp.simd_var_v_evals,
-            self.sp.hg_evals_1[0],
-            self.sp.hg_evals_5[0],
+            self.sp.add_poly_evals[0],
+            self.sp.pow_poly_evals[0],
         )
     }
 
@@ -98,11 +98,11 @@ where
             var_idx,
             r,
             &mut self.sp.v_evals,
-            &mut self.sp.hg_evals_5,
-            &mut self.sp.hg_evals_1,
+            &mut self.sp.pow_poly_evals,
+            &mut self.sp.add_poly_evals,
             &self.layer.input_vals,
-            &mut self.sp.gate_exists_5,
-            &mut self.sp.gate_exists_1,
+            &mut self.sp.gate_exists_pow,
+            &mut self.sp.gate_exists_add,
         );
         log::trace!("v_eval[0]:= {:?}", self.sp.v_evals[0]);
         self.rx.push(r);
@@ -146,19 +146,19 @@ where
         let uni = &self.layer.uni; // univariate things like square, pow5, etc.
         let vals = &self.layer.input_vals;
         let eq_evals_at_rz0 = &mut self.sp.eq_evals_at_rz0;
-        let gate_exists_5 = &mut self.sp.gate_exists_5;
-        let gate_exists_1 = &mut self.sp.gate_exists_1;
-        let hg_evals_5 = &mut self.sp.hg_evals_5;
-        let hg_evals_1 = &mut self.sp.hg_evals_1;
+        let gate_exists_pow = &mut self.sp.gate_exists_pow;
+        let gate_exists_add = &mut self.sp.gate_exists_add;
+        let pow_poly_evals = &mut self.sp.pow_poly_evals;
+        let add_poly_evals = &mut self.sp.add_poly_evals;
         // hg_vals[0..vals.len()].fill(F::zero()); // FIXED: consider memset unsafe?
         unsafe {
-            std::ptr::write_bytes(hg_evals_5.as_mut_ptr(), 0, vals.len());
-            std::ptr::write_bytes(hg_evals_1.as_mut_ptr(), 0, vals.len());
+            std::ptr::write_bytes(pow_poly_evals.as_mut_ptr(), 0, vals.len());
+            std::ptr::write_bytes(add_poly_evals.as_mut_ptr(), 0, vals.len());
         }
         // gate_exists[0..vals.len()].fill(false); // FIXED: consider memset unsafe?
         unsafe {
-            std::ptr::write_bytes(gate_exists_5.as_mut_ptr(), 0, vals.len());
-            std::ptr::write_bytes(gate_exists_1.as_mut_ptr(), 0, vals.len());
+            std::ptr::write_bytes(gate_exists_pow.as_mut_ptr(), 0, vals.len());
+            std::ptr::write_bytes(gate_exists_add.as_mut_ptr(), 0, vals.len());
         }
         EqPolynomial::<C::ChallengeField>::eq_eval_at(
             self.rz0,
@@ -171,14 +171,14 @@ where
         for g in uni.iter() {
             match g.gate_type {
                 12345 => {
-                    hg_evals_5[g.i_ids[0]] +=
+                    pow_poly_evals[g.i_ids[0]] +=
                         C::challenge_mul_circuit_field(&eq_evals_at_rz0[g.o_id], &g.coef);
-                    gate_exists_5[g.i_ids[0]] = true;
+                    gate_exists_pow[g.i_ids[0]] = true;
                 }
                 12346 => {
-                    hg_evals_1[g.i_ids[0]] +=
+                    add_poly_evals[g.i_ids[0]] +=
                         C::challenge_mul_circuit_field(&eq_evals_at_rz0[g.o_id], &g.coef);
-                    gate_exists_1[g.i_ids[0]] = true;
+                    gate_exists_add[g.i_ids[0]] = true;
                 }
                 _ => panic!("Unsupported gate type"),
             }

@@ -28,7 +28,10 @@ fn verify_sumcheck_step<C: GKRConfig, T: Transcript<C::ChallengeField>>(
     claimed_sum: &mut C::ChallengeField,
     randomness_vec: &mut Vec<C::ChallengeField>,
     sp: &VerifierScratchPad<C>,
-) -> bool {
+) -> bool
+where
+    [(); C::DEGREE_PLUS_ONE]:,
+{
     let mut ps = vec![];
     for i in 0..(degree + 1) {
         ps.push(C::ChallengeField::deserialize_from(&mut proof_reader).unwrap());
@@ -86,7 +89,10 @@ fn sumcheck_verify_gkr_layer<C: GKRConfig, T: Transcript<C::ChallengeField>>(
     Vec<C::ChallengeField>,
     C::ChallengeField,
     Option<C::ChallengeField>,
-) {
+)
+where
+    [(); C::DEGREE_PLUS_ONE]:,
+{
     assert_eq!(rz1.is_none(), claimed_v1.is_none());
     assert_eq!(rz1.is_none(), alpha.is_none());
 
@@ -189,7 +195,10 @@ pub fn gkr_verify<C: GKRConfig, T: Transcript<C::ChallengeField>>(
     Vec<C::ChallengeField>,
     C::ChallengeField,
     Option<C::ChallengeField>,
-) {
+)
+where
+    [(); C::DEGREE_PLUS_ONE]:,
+{
     let timer = start_timer!(|| "gkr verify");
     let mut sp = VerifierScratchPad::<C>::new(config, circuit);
 
@@ -279,7 +288,10 @@ impl<C: GKRConfig> Verifier<C> {
         claimed_v: &C::ChallengeField,
         proof: &Proof,
         transcript: &mut T,
-    ) -> bool {
+    ) -> bool
+    where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         let timer = start_timer!(|| "verify");
 
         let poly_size =
@@ -374,7 +386,10 @@ impl<C: GKRConfig> Verifier<C> {
         public_input: &[C::SimdCircuitField],
         claimed_v: &C::ChallengeField,
         proof: &Proof,
-    ) -> bool {
+    ) -> bool
+    where
+        [(); C::DEGREE_PLUS_ONE]:,
+    {
         match C::FIAT_SHAMIR_HASH {
             FiatShamirHashType::Keccak256 => {
                 let mut transcript =

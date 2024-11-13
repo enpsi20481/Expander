@@ -52,30 +52,30 @@ impl<const D: usize> SumcheckPowerGateHelper<D> {
         &self,
         var_idx: usize,
         bk_f: &[C::Field],
-        bk_hg_5: &[C::ChallengeField],
-        bk_hg_1: &[C::ChallengeField],
+        bk_pow_poly: &[C::ChallengeField],
+        bk_add_poly: &[C::ChallengeField],
         init_v: &[C::SimdCircuitField],
-        gate_exists_5: &[bool],
-        gate_exists_1: &[bool],
+        gate_exists_pow: &[bool],
+        gate_exists_add: &[bool],
     ) -> [C::Field; D] {
         let mut p = [C::Field::zero(); D];
         log::trace!("bk_f: {:?}", &bk_f[..4]);
-        log::trace!("bk_hg: {:?}", &bk_hg_5[..4]);
+        log::trace!("bk_pow_poly: {:?}", &bk_pow_poly[..4]);
         log::trace!("init_v: {:?}", &init_v[..4]);
         if var_idx == 0 {
             let src_v = init_v;
             let eval_size = 1 << (self.var_num - var_idx - 1);
             log::trace!("Eval size: {}", eval_size);
             for i in 0..eval_size {
-                if !gate_exists_5[i * 2] && !gate_exists_5[i * 2 + 1] {
+                if !gate_exists_pow[i * 2] && !gate_exists_pow[i * 2 + 1] {
                     continue;
                 }
                 let mut f_v = [C::SimdCircuitField::zero(); D];
                 let mut hg_v = [C::ChallengeField::zero(); D];
                 f_v[0] = src_v[i * 2];
                 f_v[1] = src_v[i * 2 + 1];
-                hg_v[0] = bk_hg_5[i * 2];
-                hg_v[1] = bk_hg_5[i * 2 + 1];
+                hg_v[0] = bk_pow_poly[i * 2];
+                hg_v[1] = bk_pow_poly[i * 2 + 1];
                 let delta_f = f_v[1] - f_v[0];
                 let delta_hg = hg_v[1] - hg_v[0];
 
@@ -90,15 +90,15 @@ impl<const D: usize> SumcheckPowerGateHelper<D> {
             }
             let mut p_add = [C::Field::zero(); 3];
             for i in 0..eval_size {
-                if !gate_exists_1[i * 2] && !gate_exists_1[i * 2 + 1] {
+                if !gate_exists_add[i * 2] && !gate_exists_add[i * 2 + 1] {
                     continue;
                 }
                 let mut f_v = [C::SimdCircuitField::zero(); 3];
                 let mut hg_v = [C::ChallengeField::zero(); 3];
                 f_v[0] = src_v[i * 2];
                 f_v[1] = src_v[i * 2 + 1];
-                hg_v[0] = bk_hg_1[i * 2];
-                hg_v[1] = bk_hg_1[i * 2 + 1];
+                hg_v[0] = bk_add_poly[i * 2];
+                hg_v[1] = bk_add_poly[i * 2 + 1];
                 p_add[0] += C::simd_circuit_field_mul_challenge_field(&f_v[0], &hg_v[0]);
                 p_add[1] += C::simd_circuit_field_mul_challenge_field(&f_v[1], &hg_v[1]);
                 let s_f_v = f_v[0] + f_v[1];
@@ -116,15 +116,15 @@ impl<const D: usize> SumcheckPowerGateHelper<D> {
             let eval_size = 1 << (self.var_num - var_idx - 1);
             log::trace!("Eval size: {}", eval_size);
             for i in 0..eval_size {
-                if !gate_exists_5[i * 2] && !gate_exists_5[i * 2 + 1] {
+                if !gate_exists_pow[i * 2] && !gate_exists_pow[i * 2 + 1] {
                     continue;
                 }
                 let mut f_v = [C::Field::zero(); D];
                 let mut hg_v = [C::ChallengeField::zero(); D];
                 f_v[0] = src_v[i * 2];
                 f_v[1] = src_v[i * 2 + 1];
-                hg_v[0] = bk_hg_5[i * 2];
-                hg_v[1] = bk_hg_5[i * 2 + 1];
+                hg_v[0] = bk_pow_poly[i * 2];
+                hg_v[1] = bk_pow_poly[i * 2 + 1];
                 let delta_f = f_v[1] - f_v[0];
                 let delta_hg = hg_v[1] - hg_v[0];
 
@@ -140,15 +140,15 @@ impl<const D: usize> SumcheckPowerGateHelper<D> {
 
             let mut p_add = [C::Field::zero(); 3];
             for i in 0..eval_size {
-                if !gate_exists_1[i * 2] && !gate_exists_1[i * 2 + 1] {
+                if !gate_exists_add[i * 2] && !gate_exists_add[i * 2 + 1] {
                     continue;
                 }
                 let mut f_v = [C::Field::zero(); 3];
                 let mut hg_v = [C::ChallengeField::zero(); 3];
                 f_v[0] = src_v[i * 2];
                 f_v[1] = src_v[i * 2 + 1];
-                hg_v[0] = bk_hg_1[i * 2];
-                hg_v[1] = bk_hg_1[i * 2 + 1];
+                hg_v[0] = bk_add_poly[i * 2];
+                hg_v[1] = bk_add_poly[i * 2 + 1];
                 p_add[0] += C::challenge_mul_field(&hg_v[0], &f_v[0]);
                 p_add[1] += C::challenge_mul_field(&hg_v[1], &f_v[1]);
 
@@ -170,11 +170,11 @@ impl<const D: usize> SumcheckPowerGateHelper<D> {
         var_idx: usize,
         r: C::ChallengeField,
         bk_f: &mut [C::Field],
-        bk_hg_5: &mut [C::ChallengeField],
-        bk_hg_1: &mut [C::ChallengeField],
+        bk_pow_poly: &mut [C::ChallengeField],
+        bk_add_poly: &mut [C::ChallengeField],
         init_v: &[C::SimdCircuitField],
-        gate_exists_5: &mut [bool],
-        gate_exists_1: &mut [bool],
+        gate_exists_pow: &mut [bool],
+        gate_exists_add: &mut [bool],
     ) {
         assert_eq!(var_idx, self.sumcheck_var_idx);
         assert!(var_idx < self.var_num);
@@ -186,40 +186,44 @@ impl<const D: usize> SumcheckPowerGateHelper<D> {
                 let init_v_0 = C::simd_circuit_field_into_field(&init_v[2 * i]);
                 bk_f[i] = init_v_0 + mul;
 
-                if !gate_exists_5[i * 2] && !gate_exists_5[i * 2 + 1] {
-                    gate_exists_5[i] = false;
-                    bk_hg_5[i] = C::ChallengeField::zero();
+                if !gate_exists_pow[i * 2] && !gate_exists_pow[i * 2 + 1] {
+                    gate_exists_pow[i] = false;
+                    bk_pow_poly[i] = C::ChallengeField::zero();
                 } else {
-                    gate_exists_5[i] = true;
-                    bk_hg_5[i] = bk_hg_5[2 * i] + (bk_hg_5[2 * i + 1] - bk_hg_5[2 * i]) * r;
+                    gate_exists_pow[i] = true;
+                    bk_pow_poly[i] =
+                        bk_pow_poly[2 * i] + (bk_pow_poly[2 * i + 1] - bk_pow_poly[2 * i]) * r;
                 }
 
-                if !gate_exists_1[i * 2] && !gate_exists_1[i * 2 + 1] {
-                    gate_exists_1[i] = false;
-                    bk_hg_1[i] = C::ChallengeField::zero();
+                if !gate_exists_add[i * 2] && !gate_exists_add[i * 2 + 1] {
+                    gate_exists_add[i] = false;
+                    bk_add_poly[i] = C::ChallengeField::zero();
                 } else {
-                    gate_exists_1[i] = true;
-                    bk_hg_1[i] = bk_hg_1[2 * i] + (bk_hg_1[2 * i + 1] - bk_hg_1[2 * i]) * r;
+                    gate_exists_add[i] = true;
+                    bk_add_poly[i] =
+                        bk_add_poly[2 * i] + (bk_add_poly[2 * i + 1] - bk_add_poly[2 * i]) * r;
                 }
             }
         } else {
             for i in 0..self.cur_eval_size >> 1 {
                 bk_f[i] = bk_f[2 * i] + (bk_f[2 * i + 1] - bk_f[2 * i]).scale(&r);
 
-                if !gate_exists_5[i * 2] && !gate_exists_5[i * 2 + 1] {
-                    gate_exists_5[i] = false;
-                    bk_hg_5[i] = C::ChallengeField::zero();
+                if !gate_exists_pow[i * 2] && !gate_exists_pow[i * 2 + 1] {
+                    gate_exists_pow[i] = false;
+                    bk_pow_poly[i] = C::ChallengeField::zero();
                 } else {
-                    gate_exists_5[i] = true;
-                    bk_hg_5[i] = bk_hg_5[2 * i] + (bk_hg_5[2 * i + 1] - bk_hg_5[2 * i]) * r;
+                    gate_exists_pow[i] = true;
+                    bk_pow_poly[i] =
+                        bk_pow_poly[2 * i] + (bk_pow_poly[2 * i + 1] - bk_pow_poly[2 * i]) * r;
                 }
 
-                if !gate_exists_1[i * 2] && !gate_exists_1[i * 2 + 1] {
-                    gate_exists_1[i] = false;
-                    bk_hg_1[i] = C::ChallengeField::zero();
+                if !gate_exists_add[i * 2] && !gate_exists_add[i * 2 + 1] {
+                    gate_exists_add[i] = false;
+                    bk_add_poly[i] = C::ChallengeField::zero();
                 } else {
-                    gate_exists_1[i] = true;
-                    bk_hg_1[i] = bk_hg_1[2 * i] + (bk_hg_1[2 * i + 1] - bk_hg_1[2 * i]) * r;
+                    gate_exists_add[i] = true;
+                    bk_add_poly[i] =
+                        bk_add_poly[2 * i] + (bk_add_poly[2 * i + 1] - bk_add_poly[2 * i]) * r;
                 }
             }
         }

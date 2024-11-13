@@ -9,8 +9,10 @@ use config::{Config, FieldType, GKRConfig};
 #[derive(Clone, Debug, Default)]
 pub struct ProverScratchPad<C: GKRConfig> {
     pub v_evals: Vec<C::Field>,
-    pub hg_evals_5: Vec<C::ChallengeField>,
-    pub hg_evals_1: Vec<C::ChallengeField>,
+    /// Evaluations of Pow5 or Pow7 polynomial
+    pub pow_poly_evals: Vec<C::ChallengeField>,
+    /// Evaluations of Add polynomial
+    pub add_poly_evals: Vec<C::ChallengeField>,
     pub hg_evals: Vec<C::Field>,
     pub simd_var_v_evals: Vec<C::ChallengeField>,
     pub simd_var_hg_evals: Vec<C::ChallengeField>,
@@ -24,8 +26,8 @@ pub struct ProverScratchPad<C: GKRConfig> {
     pub eq_evals_first_half: Vec<C::ChallengeField>,
     pub eq_evals_second_half: Vec<C::ChallengeField>,
 
-    pub gate_exists_5: Vec<bool>,
-    pub gate_exists_1: Vec<bool>,
+    pub gate_exists_pow: Vec<bool>,
+    pub gate_exists_add: Vec<bool>,
 
     pub phase2_coef: C::ChallengeField,
 }
@@ -36,8 +38,8 @@ impl<C: GKRConfig> ProverScratchPad<C> {
         let max_output_num = 1 << max_num_output_var;
         ProverScratchPad {
             v_evals: vec![C::Field::default(); max_input_num],
-            hg_evals_5: vec![C::ChallengeField::default(); max_input_num],
-            hg_evals_1: vec![C::ChallengeField::default(); max_input_num],
+            pow_poly_evals: vec![C::ChallengeField::default(); max_input_num],
+            add_poly_evals: vec![C::ChallengeField::default(); max_input_num],
             hg_evals: vec![C::Field::default(); max_input_num],
             simd_var_v_evals: vec![C::ChallengeField::default(); C::get_field_pack_size()],
             simd_var_hg_evals: vec![C::ChallengeField::default(); C::get_field_pack_size()],
@@ -63,14 +65,17 @@ impl<C: GKRConfig> ProverScratchPad<C> {
                 )
             ],
 
-            gate_exists_5: vec![false; max_input_num],
-            gate_exists_1: vec![false; max_input_num],
+            gate_exists_pow: vec![false; max_input_num],
+            gate_exists_add: vec![false; max_input_num],
             phase2_coef: C::ChallengeField::ZERO,
         }
     }
 }
 
-pub struct VerifierScratchPad<C: GKRConfig> {
+pub struct VerifierScratchPad<C: GKRConfig>
+where
+    [(); C::DEGREE_PLUS_ONE]:,
+{
     // ====== for evaluating cst, add and mul ======
     pub eq_evals_at_rz0: Vec<C::ChallengeField>,
     pub eq_evals_at_r_simd: Vec<C::ChallengeField>,
@@ -91,12 +96,15 @@ pub struct VerifierScratchPad<C: GKRConfig> {
     pub gf2_deg2_eval_coef: C::ChallengeField, // 1 / x(x - 1)
     pub deg3_eval_at: [C::ChallengeField; 4],
     pub deg3_lag_denoms_inv: [C::ChallengeField; 4],
-    // ====== for deg6 eval ======
-    pub deg6_eval_at: [C::ChallengeField; 7],
-    pub deg6_lag_denoms_inv: [C::ChallengeField; 7],
+    // ====== for deg6 or deg8 eval ======
+    pub high_deg_eval_at: [C::ChallengeField; C::DEGREE_PLUS_ONE],
+    pub high_deg_lag_denoms_inv: [C::ChallengeField; C::DEGREE_PLUS_ONE],
 }
 
-impl<C: GKRConfig> VerifierScratchPad<C> {
+impl<C: GKRConfig> VerifierScratchPad<C>
+where
+    [(); C::DEGREE_PLUS_ONE]:,
+{
     pub fn new(config: &Config<C>, circuit: &Circuit<C>) -> Self {
         let mut max_num_var = circuit
             .layers
@@ -146,30 +154,27 @@ impl<C: GKRConfig> VerifierScratchPad<C> {
             deg3_lag_denoms_inv[i] = denominator.inv().unwrap();
         }
 
-        let deg6_eval_at = if C::FIELD_TYPE == FieldType::GF2 {
-            panic!("GF2 not supported yet");
-        } else {
-            [
-                C::ChallengeField::ZERO,
-                C::ChallengeField::ONE,
-                C::ChallengeField::from(2),
-                C::ChallengeField::from(3),
-                C::ChallengeField::from(4),
-                C::ChallengeField::from(5),
-                C::ChallengeField::from(6),
-            ]
-        };
+        let high_deg_eval_at: [<C as GKRConfig>::ChallengeField; C::DEGREE_PLUS_ONE] =
+            if C::FIELD_TYPE == FieldType::GF2 {
+                panic!("GF2 not supported yet");
+            } else {
+                (0..C::DEGREE_PLUS_ONE)
+                    .map(|i| C::ChallengeField::from(i as u32))
+                    .collect::<Vec<_>>()
+                    .try_into()
+                    .unwrap()
+            };
 
-        let mut deg6_lag_denoms_inv = [C::ChallengeField::ZERO; 7];
-        for i in 0..7 {
+        let mut high_deg_lag_denoms_inv = [C::ChallengeField::ZERO; C::DEGREE_PLUS_ONE];
+        for i in 0..C::DEGREE_PLUS_ONE {
             let mut denominator = C::ChallengeField::ONE;
-            for j in 0..7 {
+            for j in 0..C::DEGREE_PLUS_ONE {
                 if j == i {
                     continue;
                 }
-                denominator *= deg6_eval_at[i] - deg6_eval_at[j];
+                denominator *= high_deg_eval_at[i] - high_deg_eval_at[j];
             }
-            deg6_lag_denoms_inv[i] = denominator.inv().unwrap();
+            high_deg_lag_denoms_inv[i] = denominator.inv().unwrap();
         }
 
         Self {
@@ -191,8 +196,8 @@ impl<C: GKRConfig> VerifierScratchPad<C> {
             gf2_deg2_eval_coef,
             deg3_eval_at,
             deg3_lag_denoms_inv,
-            deg6_eval_at,
-            deg6_lag_denoms_inv,
+            high_deg_eval_at,
+            high_deg_lag_denoms_inv,
         }
     }
 }

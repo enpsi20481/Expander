@@ -21,7 +21,10 @@ pub fn gkr_square_verify<C: GKRConfig, T: Transcript<C::ChallengeField>>(
     Vec<C::ChallengeField>,
     Vec<C::ChallengeField>,
     C::ChallengeField,
-) {
+)
+where
+    [(); C::DEGREE_PLUS_ONE]:,
+{
     let timer = start_timer!(|| "gkr verify");
     let mut sp = VerifierScratchPad::<C>::new(config, circuit);
 
@@ -95,7 +98,10 @@ fn sumcheck_verify_gkr_square_layer<C: GKRConfig, T: Transcript<C::ChallengeFiel
     Vec<C::ChallengeField>,
     Vec<C::ChallengeField>,
     C::ChallengeField,
-) {
+)
+where
+    [(); C::DEGREE_PLUS_ONE]:,
+{
     // GKR2 with Power5 gate has degree 6 polynomial
     let degree = 6;
 
