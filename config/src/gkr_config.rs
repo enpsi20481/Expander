@@ -1,5 +1,7 @@
 mod babybear_sha2;
+mod babybear_sha2_gkr2;
 mod babybear_trivial_simd_sha2;
+mod babybear_trivial_simd_sha2_gkr2;
 mod bn254_keccak;
 mod bn254_mimc;
 mod bn254_sha2;
@@ -7,7 +9,9 @@ mod gf2_ext_keccak;
 mod gf2_ext_sha2;
 mod m31_ext_keccak;
 mod m31_ext_sha2;
+mod m31_ext_sha2_gkr2;
 mod m31_trivial_simd_sha2;
+mod m31_trivial_simd_sha2_gkr2;
 
 use std::fmt::Debug;
 
@@ -15,7 +19,9 @@ use arith::{ExtensionField, Field, FieldForECC, FieldSerde, SimdField};
 use ark_std::{end_timer, start_timer};
 
 pub use babybear_sha2::BabyBearExt4ConfigSha2;
+pub use babybear_sha2_gkr2::BabyBearExt4ConfigSha2Gkr2;
 pub use babybear_trivial_simd_sha2::BabyBearTrivialSimdSha2;
+pub use babybear_trivial_simd_sha2_gkr2::BabyBearTrivialSimdSha2Gkr2;
 pub use bn254_keccak::BN254ConfigKeccak;
 pub use bn254_mimc::BN254ConfigMIMC5;
 pub use bn254_sha2::BN254ConfigSha2;
@@ -23,7 +29,9 @@ pub use gf2_ext_keccak::GF2ExtConfigKeccak;
 pub use gf2_ext_sha2::GF2ExtConfigSha2;
 pub use m31_ext_keccak::M31ExtConfigKeccak;
 pub use m31_ext_sha2::M31ExtConfigSha2;
+pub use m31_ext_sha2_gkr2::M31ExtConfigSha2Gkr2;
 pub use m31_trivial_simd_sha2::M31TrivialSimdSha2;
+pub use m31_trivial_simd_sha2_gkr2::M31TrivialSimdSha2Gkr2;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum FieldType {
