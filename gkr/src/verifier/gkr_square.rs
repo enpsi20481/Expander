@@ -102,8 +102,7 @@ fn sumcheck_verify_gkr_square_layer<C: GKRConfig, T: Transcript<C::ChallengeFiel
 where
     [(); C::DEGREE_PLUS_ONE]:,
 {
-    // GKR2 with Power5 gate has degree 6 polynomial
-    let degree = 6;
+    let degree = C::DEGREE_PLUS_ONE - 1;
 
     GKRVerifierHelper::prepare_layer(layer, &None, rz, &None, r_simd, r_mpi, sp, is_output_layer);
 
@@ -159,7 +158,8 @@ where
     let v_claim = C::ChallengeField::deserialize_from(&mut proof_reader).unwrap();
 
     sum -= v_claim * GKRVerifierHelper::eval_pow_1(&layer.uni, sp)
-        + v_claim.exp(5) * GKRVerifierHelper::eval_pow_5(&layer.uni, sp);
+        + v_claim.exp((C::DEGREE_PLUS_ONE - 2) as u128)
+            * GKRVerifierHelper::eval_pow_poly(&layer.uni, sp);
     transcript.append_field_element(&v_claim);
 
     verified &= sum == C::ChallengeField::ZERO;

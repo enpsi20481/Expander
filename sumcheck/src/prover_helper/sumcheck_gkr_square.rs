@@ -171,6 +171,7 @@ where
         for g in uni.iter() {
             match g.gate_type {
                 12345 => {
+                    assert_eq!(C::DEGREE_PLUS_ONE, 7, "Wrong config degree for Power5 gate");
                     pow_poly_evals[g.i_ids[0]] +=
                         C::challenge_mul_circuit_field(&eq_evals_at_rz0[g.o_id], &g.coef);
                     gate_exists_pow[g.i_ids[0]] = true;
@@ -179,6 +180,12 @@ where
                     add_poly_evals[g.i_ids[0]] +=
                         C::challenge_mul_circuit_field(&eq_evals_at_rz0[g.o_id], &g.coef);
                     gate_exists_add[g.i_ids[0]] = true;
+                }
+                12347 => {
+                    assert_eq!(C::DEGREE_PLUS_ONE, 9, "Wrong config degree for Power7 gate");
+                    pow_poly_evals[g.i_ids[0]] +=
+                        C::challenge_mul_circuit_field(&eq_evals_at_rz0[g.o_id], &g.coef);
+                    gate_exists_pow[g.i_ids[0]] = true;
                 }
                 _ => panic!("Unsupported gate type"),
             }

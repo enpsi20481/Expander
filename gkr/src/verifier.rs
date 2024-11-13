@@ -52,8 +52,8 @@ where
         *claimed_sum = GKRVerifierHelper::degree_2_eval(&ps, r, sp);
     } else if degree == 3 {
         *claimed_sum = GKRVerifierHelper::degree_3_eval(&ps, r, sp);
-    } else if degree == 6 {
-        *claimed_sum = GKRVerifierHelper::degree_6_eval(&ps, r, sp);
+    } else if degree == 6 || degree == 8 {
+        *claimed_sum = GKRVerifierHelper::lag_eval(&ps, r, sp);
     } else {
         panic!("unsupported degree");
     }

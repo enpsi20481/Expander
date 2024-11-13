@@ -125,6 +125,12 @@ pub trait Field:
         let t = self.mul_by_3();
         t + t
     }
+
+    #[inline(always)]
+    fn mul_by_7(&self) -> Self {
+        let t = self.mul_by_6();
+        *self + t
+    }
 }
 
 pub trait FieldForECC: Field + Hash + Eq + PartialOrd + Ord {

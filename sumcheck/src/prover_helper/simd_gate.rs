@@ -115,7 +115,14 @@ impl SumcheckSimdProdGateHelper {
             }
             for i in 0..C::DEGREE_PLUS_ONE {
                 let pow5 = f_v[i].square().square() * f_v[i];
-                p[i] += pow_5_eval * pow5 * eq_v[i];
+                let pow_final = if C::DEGREE_PLUS_ONE == 7 {
+                    pow5
+                } else if C::DEGREE_PLUS_ONE == 9 {
+                    pow5 * f_v[i].square()
+                } else {
+                    panic!("Unsupported degree");
+                };
+                p[i] += pow_5_eval * pow_final * eq_v[i];
             }
 
             // Evaluate term eq(A, r_z) * Add(r_z, r_x) * V(A, r_x)
@@ -126,7 +133,7 @@ impl SumcheckSimdProdGateHelper {
         }
         p_add[2] = p_add[1].mul_by_6() + p_add[0].mul_by_3() - p_add[2].double();
 
-        // Interpolate p_add into 7 points, add to p
+        // Interpolate p_add into C::DEGREE_PLUS_ONE points, add to p
         Self::interpolate_3::<C>(&p_add, &mut p);
         p
     }
@@ -136,6 +143,9 @@ impl SumcheckSimdProdGateHelper {
         p_add: &[C::ChallengeField; 3],
         p: &mut [C::ChallengeField; C::DEGREE_PLUS_ONE],
     ) {
+        if C::DEGREE_PLUS_ONE != 7 && C::DEGREE_PLUS_ONE != 9 {
+            panic!("Only support D = 7 or D = 9");
+        }
         // Calculate coefficients for the interpolating polynomial
         let p_add_coef_0 = p_add[0];
         let p_add_coef_2 = C::challenge_mul_circuit_field(
@@ -160,6 +170,14 @@ impl SumcheckSimdProdGateHelper {
         p[6] += p_add_coef_0
             + p_add_coef_1.mul_by_3().double()
             + C::challenge_mul_circuit_field(&p_add_coef_2, &C::CircuitField::from(36));
+        if C::DEGREE_PLUS_ONE == 9 {
+            p[7] += p_add_coef_0
+                + p_add_coef_1.mul_by_7()
+                + C::challenge_mul_circuit_field(&p_add_coef_2, &C::CircuitField::from(49));
+            p[8] += p_add_coef_0
+                + p_add_coef_1.double().double().double()
+                + C::challenge_mul_circuit_field(&p_add_coef_2, &C::CircuitField::from(64));
+        }
     }
 
     #[inline]

@@ -208,7 +208,8 @@ where
 
 #[test]
 fn ecc_poseidon_baby_bear() {
-    type GkrConfigType = config::BabyBearTrivialSimdSha2;
+    // type GkrConfigType = config::BabyBearTrivialSimdSha2Gkr2;
+    type GkrConfigType = config::BabyBearExt4ConfigSha2Gkr2;
     env_logger::init();
 
     const POSEIDON_CIRCUIT: &str = "../data/poseidon2_babybear.circuit";

@@ -21,6 +21,9 @@ impl<const D: usize> SumcheckPowerGateHelper<D> {
 
     // Function to interpolate a quadratic polynomial and update an array of points
     fn interpolate_3<C: GKRConfig>(p_add: &[C::Field; 3], p: &mut [C::Field; D]) {
+        if D != 7 && D != 9 {
+            panic!("Only support D = 7 or D = 9");
+        }
         // Calculate coefficients for the interpolating polynomial
         let p_add_coef_0 = p_add[0];
         let p_add_coef_2 = C::field_mul_circuit_field(
@@ -45,6 +48,14 @@ impl<const D: usize> SumcheckPowerGateHelper<D> {
         p[6] += p_add_coef_0
             + p_add_coef_1.mul_by_3().double()
             + C::field_mul_circuit_field(&p_add_coef_2, &C::CircuitField::from(36));
+        if D == 9 {
+            p[7] += p_add_coef_0
+                + p_add_coef_1.mul_by_7()
+                + C::field_mul_circuit_field(&p_add_coef_2, &C::CircuitField::from(49));
+            p[8] += p_add_coef_0
+                + p_add_coef_1.double().double().double()
+                + C::field_mul_circuit_field(&p_add_coef_2, &C::CircuitField::from(64));
+        }
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -85,7 +96,12 @@ impl<const D: usize> SumcheckPowerGateHelper<D> {
                 }
                 for i in 0..D {
                     let pow5 = f_v[i].square().square() * f_v[i];
-                    p[i] += C::simd_circuit_field_mul_challenge_field(&pow5, &hg_v[i]);
+                    let pow_final = match D {
+                        7 => pow5,
+                        9 => pow5 * f_v[i].square(),
+                        _ => panic!("Only support D = 7 or D = 9"),
+                    };
+                    p[i] += C::simd_circuit_field_mul_challenge_field(&pow_final, &hg_v[i]);
                 }
             }
             let mut p_add = [C::Field::zero(); 3];
@@ -108,7 +124,7 @@ impl<const D: usize> SumcheckPowerGateHelper<D> {
 
             p_add[2] = p_add[1].mul_by_6() + p_add[0].mul_by_3() - p_add[2].double();
 
-            // interpolate p_add into 7 points
+            // interpolate p_add into D points
             Self::interpolate_3::<C>(&p_add, &mut p);
             p
         } else {
@@ -134,7 +150,12 @@ impl<const D: usize> SumcheckPowerGateHelper<D> {
                 }
                 for i in 0..D {
                     let pow5 = f_v[i].square().square() * f_v[i];
-                    p[i] += C::challenge_mul_field(&hg_v[i], &pow5);
+                    let pow_final = match D {
+                        7 => pow5,
+                        9 => pow5 * f_v[i].square(),
+                        _ => panic!("Only support D = 7 or D = 9"),
+                    };
+                    p[i] += C::challenge_mul_field(&hg_v[i], &pow_final);
                 }
             }
 

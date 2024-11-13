@@ -172,7 +172,7 @@ impl GKRVerifierHelper {
     }
 
     #[inline(always)]
-    pub fn eval_pow_5<C: GKRConfig>(
+    pub fn eval_pow_poly<C: GKRConfig>(
         gates: &[GateUni<C>],
         sp: &VerifierScratchPad<C>,
     ) -> C::ChallengeField
@@ -182,7 +182,7 @@ impl GKRVerifierHelper {
         let mut v = C::ChallengeField::zero();
         for gate in gates {
             // Gates of type 12345 represent a pow5 gate
-            if gate.gate_type == 12345 {
+            if gate.gate_type == 12345 || gate.gate_type == 12347 {
                 v += sp.eq_evals_at_rz0[gate.o_id]
                     * C::challenge_mul_circuit_field(&sp.eq_evals_at_rx[gate.i_ids[0]], &gate.coef);
             }
@@ -286,19 +286,7 @@ impl GKRVerifierHelper {
     }
 
     #[inline(always)]
-    pub fn degree_6_eval<C: GKRConfig>(
-        vals: &[C::ChallengeField],
-        x: C::ChallengeField,
-        sp: &VerifierScratchPad<C>,
-    ) -> C::ChallengeField
-    where
-        [(); C::DEGREE_PLUS_ONE]:,
-    {
-        Self::lag_eval(vals, x, sp)
-    }
-
-    #[inline(always)]
-    fn lag_eval<C: GKRConfig>(
+    pub fn lag_eval<C: GKRConfig>(
         vals: &[C::ChallengeField],
         x: C::ChallengeField,
         sp: &VerifierScratchPad<C>,

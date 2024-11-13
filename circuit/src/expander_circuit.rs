@@ -69,7 +69,7 @@ impl<C: GKRConfig> CircuitLayer<C> {
             let o = &mut res[gate.o_id];
             match gate.gate_type {
                 12345 => {
-                    // pow5
+                    assert_eq!(C::DEGREE_PLUS_ONE, 7, "Wrong config degree for Power5 gate");
                     let i0_2 = i0.square();
                     let i0_4 = i0_2.square();
                     let i0_5 = i0_4 * i0;
@@ -78,6 +78,14 @@ impl<C: GKRConfig> CircuitLayer<C> {
                 12346 => {
                     // pow1
                     *o += C::circuit_field_mul_simd_circuit_field(&gate.coef, i0);
+                }
+                12347 => {
+                    assert_eq!(C::DEGREE_PLUS_ONE, 9, "Wrong config degree for Power7 gate");
+                    let i0_2 = i0.square();
+                    let i0_4 = i0_2.square();
+                    let i0_6 = i0_4 * i0_2;
+                    let i0_7 = i0_6 * i0;
+                    *o += C::circuit_field_mul_simd_circuit_field(&gate.coef, &i0_7);
                 }
                 _ => panic!("Unknown gate type: {}", gate.gate_type),
             }
