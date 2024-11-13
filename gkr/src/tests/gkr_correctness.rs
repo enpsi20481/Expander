@@ -222,3 +222,20 @@ fn ecc_poseidon_baby_bear() {
 
     do_prove_verify(config, &mut circuit);
 }
+
+#[test]
+fn ecc_pow5_m31() {
+    type GkrConfigType = config::M31ExtConfigSha2Gkr2;
+    // type GkrConfigType = config::M31TrivialSimdSha2Gkr2;
+    env_logger::init();
+
+    const POW5_CIRCUIT: &str = "../data/pow5_example.circuit";
+    const POW5_WITNESS: &str = "../data/pow5_example.witness";
+
+    let mut circuit = Circuit::<GkrConfigType>::load_circuit(POW5_CIRCUIT);
+    circuit.load_non_simd_witness_file(POW5_WITNESS);
+
+    let config = Config::<GkrConfigType>::new(GKRScheme::GkrSquare, MPIConfig::new());
+
+    do_prove_verify(config, &mut circuit);
+}
